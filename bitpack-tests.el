@@ -108,24 +108,76 @@
         (dolist (float floats)
           (should (eql (bitpack-load-f32 byte-order) float)))))))
 
-(ert-deftest bitpack-i64()
-  ;; Check unrepresentable integer
-  (with-temp-buffer
-    (save-excursion
-      (insert #x80 0 0 0 0 0 0 0))
-    (should-error (bitpack-load-u64 :>)
-                  :type 'arith-error))
-  ;; Check that u64 doesn't return negative
-  (with-temp-buffer
-    (save-excursion
-      (bitpack-store-i64 :> -1))
-    (should-error (bitpack-load-u64 :>)
-                  :type 'arith-error))
-  ;; Check that s64 still works
-  (with-temp-buffer
-    (save-excursion
-      (bitpack-store-i64 :> -1))
-    (should (eql (bitpack-load-s64 :>) -1))))
+(defun random-integers (min max n)
+  "Return N random integers between MIN (inclusive) and MAX (exclusive)."
+  (let ((list ()))
+    (dotimes (_ n)
+      (push (+ (cl-random (- max min)) min) list))
+    list))
+
+(defun drive (encode decode min max n &optional dir)
+  (let ((list (random-integers min max n)))
+    (if dir
+        (with-temp-buffer
+          (save-excursion
+            (dolist (x list)
+              (funcall encode dir x)))
+          (dolist (x list)
+            (should (eql (funcall decode dir) x))))
+      (with-temp-buffer
+        (save-excursion
+          (dolist (x list)
+            (funcall encode x)))
+        (dolist (x list)
+          (should (eql (funcall decode) x)))))))
+
+(ert-deftest bitpack-u8 ()
+  (drive #'bitpack-store-i8 #'bitpack-load-u8 0 #x100 200))
+
+(ert-deftest bitpack-s8 ()
+  (drive #'bitpack-store-i8 #'bitpack-load-s8 (- #x80) #x80 200))
+
+(ert-deftest bitpack-u16 ()
+  (let ((min 0)
+        (max #x10000)
+        (n   10000))
+    (drive #'bitpack-store-i16 #'bitpack-load-u16 min max n :>)
+    (drive #'bitpack-store-i16 #'bitpack-load-u16 min max n :<)))
+
+(ert-deftest bitpack-s16 ()
+  (let ((min (- #x8000))
+        (max #x8000)
+        (n   10000))
+    (drive #'bitpack-store-i16 #'bitpack-load-s16 min max n :>)
+    (drive #'bitpack-store-i16 #'bitpack-load-s16 min max n :<)))
+
+(ert-deftest bitpack-u32 ()
+  (let ((min 0)
+        (max #x100000000)
+        (n   100000))
+    (drive #'bitpack-store-i32 #'bitpack-load-u32 min max n :>)
+    (drive #'bitpack-store-i32 #'bitpack-load-u32 min max n :<)))
+
+(ert-deftest bitpack-s32 ()
+  (let ((min (- #x80000000))
+        (max #x80000000)
+        (n   100000))
+    (drive #'bitpack-store-i32 #'bitpack-load-s32 min max n :>)
+    (drive #'bitpack-store-i32 #'bitpack-load-s32 min max n :<)))
+
+(ert-deftest bitpack-u64 ()
+  (let ((min 0)
+        (max most-positive-fixnum)
+        (n   100000))
+    (drive #'bitpack-store-i64 #'bitpack-load-u64 min max n :>)
+    (drive #'bitpack-store-i64 #'bitpack-load-u64 min max n :<)))
+
+(ert-deftest bitpack-s64 ()
+  (let ((min most-negative-fixnum)
+        (max most-positive-fixnum)
+        (n   100000))
+    (drive #'bitpack-store-i64 #'bitpack-load-s64 min max n :>)
+    (drive #'bitpack-store-i64 #'bitpack-load-s64 min max n :<)))
 
 (defun bitpack-benchmark ()
   (princ

@@ -4,11 +4,16 @@
 package can encode IEEE 754 floating point values, both single
 (32-bit) and double precision (64-bit).
 
-**Requires a 64-bit build of Emacs.** Use `make check` to verify that
-your particular Emacs build works correctly with this package.
-
 In Emacs 26.1 on modern x86-64 hardware, it stores ~290k double
 precision floats per second, and loads them at ~1.3M per second.
+
+Requires either:
+
+* Emacs 27
+* Emacs 26 and ealier: 64-bit only
+
+Use `make check` to verify that your particular Emacs build works
+correctly with this package.
 
 ## API
 
@@ -46,9 +51,7 @@ endian.
 ```
 
 When writing values, the sign doesn't matter. When reading values, the
-sign determines how the value is interpreted. If the input value
-cannot be represented as an Emacs Lisp integer, an `arith-error` is
-signaled.
+sign determines how the value is interpreted.
 
 ## Example
 

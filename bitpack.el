@@ -26,47 +26,47 @@
 
 (defsubst bitpack--store-f32> (negp biased-exp mantissa)
   (insert (if negp
-              (logior #x80 (lsh biased-exp -1))
-            (lsh biased-exp -1))
-          (logior (% (lsh mantissa -16) 128)
-                  (% (lsh biased-exp 7) 256))
-          (% (lsh mantissa -8) 256)
+              (logior #x80 (ash biased-exp -1))
+            (ash biased-exp -1))
+          (logior (% (ash mantissa -16) 128)
+                  (% (ash biased-exp 7) 256))
+          (% (ash mantissa -8) 256)
           (% mantissa 256)))
 
 (defsubst bitpack--store-f32< (negp biased-exp mantissa)
   (insert (% mantissa 256)
-          (% (lsh mantissa -8) 256)
-          (logior (% (lsh mantissa -16) 128)
-                  (% (lsh biased-exp 7) 256))
+          (% (ash mantissa -8) 256)
+          (logior (% (ash mantissa -16) 128)
+                  (% (ash biased-exp 7) 256))
           (if negp
-              (logior #x80 (lsh biased-exp -1))
-            (lsh biased-exp -1))))
+              (logior #x80 (ash biased-exp -1))
+            (ash biased-exp -1))))
 
 (defsubst bitpack--store-f64> (negp biased-exp mantissa)
   (insert (if negp
-              (logior #x80 (lsh biased-exp -4))
-            (lsh biased-exp -4))
-          (logior (% (lsh mantissa -48) 16)
-                  (% (lsh biased-exp 4) 256))
-          (% (lsh mantissa -40) 256)
-          (% (lsh mantissa -32) 256)
-          (% (lsh mantissa -24) 256)
-          (% (lsh mantissa -16) 256)
-          (% (lsh mantissa  -8) 256)
+              (logior #x80 (ash biased-exp -4))
+            (ash biased-exp -4))
+          (logior (% (ash mantissa -48) 16)
+                  (% (ash biased-exp 4) 256))
+          (% (ash mantissa -40) 256)
+          (% (ash mantissa -32) 256)
+          (% (ash mantissa -24) 256)
+          (% (ash mantissa -16) 256)
+          (% (ash mantissa  -8) 256)
           (% mantissa 256)))
 
 (defsubst bitpack--store-f64< (negp biased-exp mantissa)
   (insert (% mantissa 256)
-          (% (lsh mantissa  -8) 256)
-          (% (lsh mantissa -16) 256)
-          (% (lsh mantissa -24) 256)
-          (% (lsh mantissa -32) 256)
-          (% (lsh mantissa -40) 256)
-          (logior (% (lsh mantissa -48) 16)
-                  (% (lsh biased-exp 4) 256))
+          (% (ash mantissa  -8) 256)
+          (% (ash mantissa -16) 256)
+          (% (ash mantissa -24) 256)
+          (% (ash mantissa -32) 256)
+          (% (ash mantissa -40) 256)
+          (logior (% (ash mantissa -48) 16)
+                  (% (ash biased-exp 4) 256))
           (if negp
-              (logior #x80 (lsh biased-exp -4))
-            (lsh biased-exp -4))))
+              (logior #x80 (ash biased-exp -4))
+            (ash biased-exp -4))))
 
 (defun bitpack-store-f32 (byte-order x)
   "Store single precision float X in buffer at point per BYTE-ORDER.
@@ -126,22 +126,22 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 BYTE-ORDER may be :> (big endian) or :> (little endian). The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
-    (:> (insert (logand (lsh x -56) #xff)
-                (logand (lsh x -48) #xff)
-                (logand (lsh x -40) #xff)
-                (logand (lsh x -32) #xff)
-                (logand (lsh x -24) #xff)
-                (logand (lsh x -16) #xff)
-                (logand (lsh x  -8) #xff)
+    (:> (insert (logand (ash x -56) #xff)
+                (logand (ash x -48) #xff)
+                (logand (ash x -40) #xff)
+                (logand (ash x -32) #xff)
+                (logand (ash x -24) #xff)
+                (logand (ash x -16) #xff)
+                (logand (ash x  -8) #xff)
                 (logand      x      #xff)))
     (:< (insert (logand      x      #xff)
-                (logand (lsh x  -8) #xff)
-                (logand (lsh x -16) #xff)
-                (logand (lsh x -24) #xff)
-                (logand (lsh x -32) #xff)
-                (logand (lsh x -40) #xff)
-                (logand (lsh x -48) #xff)
-                (logand (lsh x -56) #xff)))))
+                (logand (ash x  -8) #xff)
+                (logand (ash x -16) #xff)
+                (logand (ash x -24) #xff)
+                (logand (ash x -32) #xff)
+                (logand (ash x -40) #xff)
+                (logand (ash x -48) #xff)
+                (logand (ash x -56) #xff)))))
 
 (defun bitpack-store-i32 (byte-order x)
   "Store 32-bit integer X in buffer at point per BYTE-ORDER.
@@ -149,14 +149,14 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 BYTE-ORDER may be :> (big endian) or :> (little endian). The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
-    (:> (insert (logand (lsh x -24) #xff)
-                (logand (lsh x -16) #xff)
-                (logand (lsh x  -8) #xff)
+    (:> (insert (logand (ash x -24) #xff)
+                (logand (ash x -16) #xff)
+                (logand (ash x  -8) #xff)
                 (logand      x      #xff)))
     (:< (insert (logand      x      #xff)
-                (logand (lsh x  -8) #xff)
-                (logand (lsh x -16) #xff)
-                (logand (lsh x -24) #xff)))))
+                (logand (ash x  -8) #xff)
+                (logand (ash x -16) #xff)
+                (logand (ash x -24) #xff)))))
 
 (defun bitpack-store-i16 (byte-order x)
   "Store 16-bit integer X in buffer at point per BYTE-ORDER.
@@ -164,10 +164,10 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 BYTE-ORDER may be :> (big endian) or :> (little endian). The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
-    (:> (insert (logand (lsh x  -8) #xff)
+    (:> (insert (logand (ash x  -8) #xff)
                 (logand      x      #xff)))
     (:< (insert (logand      x      #xff)
-                (logand (lsh x  -8) #xff)))))
+                (logand (ash x  -8) #xff)))))
 
 (defsubst bitpack-store-i8 (x)
   "Store 8-bit integer X in buffer at point.
@@ -179,10 +179,10 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 
 (defsubst bitpack--load-f32 (b0 b1 b2 b3)
   (let* ((negp (= #x80 (logand b0 #x80)))
-         (exp (logand (logior (lsh b0 1) (lsh b1 -7)) #xff))
+         (exp (logand (logior (ash b0 1) (ash b1 -7)) #xff))
          (mantissa (logior #x800000
-                           (lsh (logand #x7f b1) 16)
-                           (lsh b2 8)
+                           (ash (logand #x7f b1) 16)
+                           (ash b2 8)
                            b3))
          (result (if (= #xff exp)
                      (if (= #x800000 mantissa)
@@ -195,14 +195,14 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 
 (defsubst bitpack--load-f64 (b0 b1 b2 b3 b4 b5 b6 b7)
   (let* ((negp (= #x80 (logand b0 #x80)))
-         (exp (logand (logior (lsh b0 4) (lsh b1 -4)) #x7ff))
+         (exp (logand (logior (ash b0 4) (ash b1 -4)) #x7ff))
          (mantissa (logior #x10000000000000
-                           (lsh (logand #xf b1) 48)
-                           (lsh b2 40)
-                           (lsh b3 32)
-                           (lsh b4 24)
-                           (lsh b5 16)
-                           (lsh b6  8)
+                           (ash (logand #xf b1) 48)
+                           (ash b2 40)
+                           (ash b3 32)
+                           (ash b4 24)
+                           (ash b5 16)
+                           (ash b6  8)
                            b7))
          (result (if (= #x7ff exp)
                      (if (= #x10000000000000 mantissa)
@@ -267,8 +267,8 @@ point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char))))
     (cl-case byte-order
-      (:> (logior (lsh b0 8) b1))
-      (:< (logior (lsh b1 8) b0)))))
+      (:> (logior (ash b0 8) b1))
+      (:< (logior (ash b1 8) b0)))))
 
 (defun bitpack-load-s16 (byte-order)
   "Load signed 16-bit integer from buffer at point per BYTE-ORDER.
@@ -290,8 +290,8 @@ point will be left just after the loaded value."
         (b2 (prog1 (char-after) (forward-char)))
         (b3 (prog1 (char-after) (forward-char))))
     (cl-case byte-order
-      (:> (logior (lsh b0 24) (lsh b1 16) (lsh b2 8) b3))
-      (:< (logior (lsh b3 24) (lsh b2 16) (lsh b1 8) b0)))))
+      (:> (logior (ash b0 24) (ash b1 16) (ash b2 8) b3))
+      (:< (logior (ash b3 24) (ash b2 16) (ash b1 8) b0)))))
 
 (defun bitpack-load-s32 (byte-order)
   "Load signed 32-bit integer from buffer at point per BYTE-ORDER.
@@ -303,7 +303,11 @@ point will be left just after the loaded value."
         (logior -4294967296 x)
       x)))
 
-(defun bitpack--load-i64 (byte-order)
+(defun bitpack-load-u64 (byte-order)
+  "Load unsigned 64-bit integer from buffer at point per BYTE-ORDER.
+
+BYTE-ORDER may be :> (big endian) or :> (little endian). The
+point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
         (b2 (prog1 (char-after) (forward-char)))
@@ -312,38 +316,21 @@ point will be left just after the loaded value."
         (b5 (prog1 (char-after) (forward-char)))
         (b6 (prog1 (char-after) (forward-char)))
         (b7 (prog1 (char-after) (forward-char))))
-    (let ((high (lsh b0 -6)))
-      (unless (or (= high #x00) (= high #x03))
-        (signal 'arith-error (list "Unrepresentable" high
-                                   b0 b1 b2 b3 b4 b5 b6 b7))))
     (cl-case byte-order
-      (:> (logior (lsh b0 56) (lsh b1 48) (lsh b2 40) (lsh b3 32)
-                  (lsh b4 24) (lsh b5 16) (lsh b6 8) b7))
-      (:< (logior (lsh b7 56) (lsh b6 48) (lsh b5 40) (lsh b4 32)
-                  (lsh b3 24) (lsh b2 16) (lsh b1 8) b0)))))
-
-(defun bitpack-load-u64 (byte-order)
-  "Load unsigned 32-bit integer from buffer at point per BYTE-ORDER.
-
-BYTE-ORDER may be :> (big endian) or :> (little endian). The
-point will be left just after the loaded value.
-
-This function will signal `arith-error' if the integer being
-cannot be represented as an Emacs Lisp integer."
-  (let ((result (bitpack--load-i64 byte-order)))
-    (prog1 result
-      (when (< result 0)
-        (signal 'arith-error (cons "Unrepresentable" result))))))
+      (:> (logior (ash b0 56) (ash b1 48) (ash b2 40) (ash b3 32)
+                  (ash b4 24) (ash b5 16) (ash b6 8) b7))
+      (:< (logior (ash b7 56) (ash b6 48) (ash b5 40) (ash b4 32)
+                  (ash b3 24) (ash b2 16) (ash b1 8) b0)))))
 
 (defun bitpack-load-s64 (byte-order)
-  "Load signed 32-bit integer from buffer at point per BYTE-ORDER.
+  "Load signed 64-bit integer from buffer at point per BYTE-ORDER.
 
 BYTE-ORDER may be :> (big endian) or :> (little endian). The
-point will be left just after the loaded value.
-
-This function will signal `arith-error' if the integer being
-cannot be represented as an Emacs Lisp integer."
-  (bitpack--load-i64 byte-order))
+point will be left just after the loaded value."
+  (let ((x (bitpack-load-u64 byte-order)))
+    (if (> x #x7fffffffffffffff)
+        (logior -18446744073709551616 x)
+      x)))
 
 (provide 'bitpack)
 
