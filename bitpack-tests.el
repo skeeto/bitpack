@@ -154,30 +154,50 @@
 (ert-deftest bitpack-u32 ()
   (let ((min 0)
         (max #x100000000)
-        (n   100000))
+        (n   10000))
     (drive #'bitpack-store-i32 #'bitpack-load-u32 min max n :>)
     (drive #'bitpack-store-i32 #'bitpack-load-u32 min max n :<)))
 
 (ert-deftest bitpack-s32 ()
   (let ((min (- #x80000000))
         (max #x80000000)
-        (n   100000))
+        (n   10000))
     (drive #'bitpack-store-i32 #'bitpack-load-s32 min max n :>)
     (drive #'bitpack-store-i32 #'bitpack-load-s32 min max n :<)))
 
 (ert-deftest bitpack-u64 ()
   (let ((min 0)
         (max most-positive-fixnum)
-        (n   100000))
+        (n   10000))
     (drive #'bitpack-store-i64 #'bitpack-load-u64 min max n :>)
     (drive #'bitpack-store-i64 #'bitpack-load-u64 min max n :<)))
 
 (ert-deftest bitpack-s64 ()
   (let ((min most-negative-fixnum)
         (max most-positive-fixnum)
-        (n   100000))
+        (n   10000))
     (drive #'bitpack-store-i64 #'bitpack-load-s64 min max n :>)
     (drive #'bitpack-store-i64 #'bitpack-load-s64 min max n :<)))
+
+(defun single-64 (decode dir x)
+  (with-temp-buffer
+    (save-excursion
+      (bitpack-store-i64 dir x))
+    (eql (funcall decode dir) x)))
+
+(ert-deftest bitpack-64-validate ()
+  (should (single-64 #'bitpack-load-u64 :> most-positive-fixnum))
+  (should (single-64 #'bitpack-load-u64 :< most-positive-fixnum))
+  (should (single-64 #'bitpack-load-s64 :> most-negative-fixnum))
+  (should (single-64 #'bitpack-load-s64 :< most-negative-fixnum))
+  (should (single-64 #'bitpack-load-s64 :> -1))
+  (should (single-64 #'bitpack-load-s64 :< -1))
+  (unless (fboundp 'bignump)
+    (should-error (single-64 #'bitpack-load-u64 :< -1))
+    (should-error (single-64 #'bitpack-load-u64 :< most-negative-fixnum))
+    (with-temp-buffer
+      (insert #x80 0 0 0 0 0 0 0)
+      (should-error (bitpack-load-s64 :>)))))
 
 (defun bitpack-benchmark ()
   (princ

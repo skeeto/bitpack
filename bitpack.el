@@ -303,11 +303,13 @@ point will be left just after the loaded value."
         (logior -4294967296 x)
       x)))
 
-(defun bitpack-load-u64 (byte-order)
-  "Load unsigned 64-bit integer from buffer at point per BYTE-ORDER.
+(defmacro bitpack--strict (&rest body)
+  "Toss out BODY if bignum is supported."
+  (declare (indent 0))
+  (unless (fboundp 'bignump)
+    `(progn ,@body)))
 
-BYTE-ORDER may be :> (big endian) or :> (little endian). The
-point will be left just after the loaded value."
+(defun bitpack--load-i64 (byte-order)
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
         (b2 (prog1 (char-after) (forward-char)))
@@ -316,18 +318,43 @@ point will be left just after the loaded value."
         (b5 (prog1 (char-after) (forward-char)))
         (b6 (prog1 (char-after) (forward-char)))
         (b7 (prog1 (char-after) (forward-char))))
+    (bitpack--strict
+      (let* ((msb (cl-case byte-order
+                    (:> b0)
+                    (:< b7)))
+             (high (lsh msb -6)))
+        (unless (or (= high #x00) (= high #x03))
+          (signal 'arith-error (list "Unrepresentable" high
+                                     b0 b1 b2 b3 b4 b5 b6 b7)))))
     (cl-case byte-order
       (:> (logior (ash b0 56) (ash b1 48) (ash b2 40) (ash b3 32)
                   (ash b4 24) (ash b5 16) (ash b6 8) b7))
       (:< (logior (ash b7 56) (ash b6 48) (ash b5 40) (ash b4 32)
                   (ash b3 24) (ash b2 16) (ash b1 8) b0)))))
 
+(defun bitpack-load-u64 (byte-order)
+  "Load unsigned 64-bit integer from buffer at point per BYTE-ORDER.
+
+BYTE-ORDER may be :> (big endian) or :> (little endian). The
+point will be left just after the loaded value.
+
+Prior to Emacs 27, this function will signal `arith-error' if the
+integer cannot be represented as an Emacs Lisp integer."
+  (let ((x (bitpack--load-i64 byte-order)))
+    (prog1 x
+      (bitpack--strict
+        (when (< x 0)
+          (signal 'arith-error (cons "Unrepresentable" x)))))))
+
 (defun bitpack-load-s64 (byte-order)
   "Load signed 64-bit integer from buffer at point per BYTE-ORDER.
 
 BYTE-ORDER may be :> (big endian) or :> (little endian). The
-point will be left just after the loaded value."
-  (let ((x (bitpack-load-u64 byte-order)))
+point will be left just after the loaded value.
+
+Prior to Emacs 27, this function will signal `arith-error' if the
+integer cannot be represented as an Emacs Lisp integer."
+  (let ((x (bitpack--load-i64 byte-order)))
     (if (> x #x7fffffffffffffff)
         (logior -18446744073709551616 x)
       x)))
