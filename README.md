@@ -9,8 +9,8 @@ precision floats per second, and loads them at ~1.3M per second.
 
 Requires either:
 
-* Emacs 27
-* Emacs 26 and ealier: 64-bit only
+* Emacs 27 (any)
+* Emacs 24.3 through 26.x (64-bit or `--with-wide-int` 32-bit)
 
 Use `make check` to verify that your particular Emacs build works
 correctly with this package.
