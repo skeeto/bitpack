@@ -18,7 +18,7 @@ correctly with this package.
 ## API
 
 Rather than return and accept unibyte strings, each function operates
-on the current buffer. This buffer must not be mulibyte (i.e.
+on the current buffer. This buffer must not be multibyte (i.e.
 `set-buffer-multibyte` to nil).
 
 The `byte-order` argument can be `:>` (big endian) or `:<` little
