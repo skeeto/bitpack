@@ -32,6 +32,9 @@
 ;; Store functions
 
 (defsubst bitpack--store-f32> (negp biased-exp mantissa)
+  "Store a single precision float in buffer at point as big-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (if negp
               (logior #x80 (ash biased-exp -1))
             (ash biased-exp -1))
@@ -41,6 +44,9 @@
           (% mantissa 256)))
 
 (defsubst bitpack--store-f32< (negp biased-exp mantissa)
+  "Store a single precision float in buffer at point as little-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (% mantissa 256)
           (% (ash mantissa -8) 256)
           (logior (% (ash mantissa -16) 128)
@@ -50,6 +56,9 @@
             (ash biased-exp -1))))
 
 (defsubst bitpack--store-f64> (negp biased-exp mantissa)
+  "Store a double precision float in buffer at point as big-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (if negp
               (logior #x80 (ash biased-exp -4))
             (ash biased-exp -4))
@@ -63,6 +72,9 @@
           (% mantissa 256)))
 
 (defsubst bitpack--store-f64< (negp biased-exp mantissa)
+  "Store a double precision float in buffer at point as little-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (% mantissa 256)
           (% (ash mantissa  -8) 256)
           (% (ash mantissa -16) 256)
@@ -185,6 +197,10 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 ;; Load functions
 
 (defsubst bitpack--load-f32 (b0 b1 b2 b3)
+  "Load single precision float from the given bytes.
+
+B0, B1, B2, B3 are the bytes making up the float.
+B0 contains the MSB."
   (let* ((negp (= #x80 (logand b0 #x80)))
          (exp (logand (logior (ash b0 1) (ash b1 -7)) #xff))
          (mantissa (logior #x800000
@@ -201,6 +217,10 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
       result)))
 
 (defsubst bitpack--load-f64 (b0 b1 b2 b3 b4 b5 b6 b7)
+  "Load double precision float from the given bytes.
+
+B0, B1, B2, B3, B4, B5, B6, B7 are the bytes making up the float.
+B0 contains the MSB."
   (let* ((negp (= #x80 (logand b0 #x80)))
          (exp (logand (logior (ash b0 4) (ash b1 -4)) #x7ff))
          (mantissa (logior #x10000000000000
@@ -317,6 +337,13 @@ point will be left just after the loaded value."
     `(progn ,@body)))
 
 (defun bitpack--load-i64 (byte-order)
+  "Load 64-bit integer from buffer at point per BYTE-ORDER.
+
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
+point will be left just after the loaded value.
+
+This is an internal function, use `bitpack-load-u64' or
+`bitpack-load-s64' instead."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
         (b2 (prog1 (char-after) (forward-char)))
