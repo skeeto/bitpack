@@ -35,11 +35,11 @@
         (should (= -1.0e+INF result)))))
   ;; Check specific known value
   (with-temp-buffer
-    (bitpack-store-f64 :> pi)
+    (bitpack-store-f64 :> float-pi)
     (should (equal (buffer-string)
                    (string #x40 #x09 #x21 #xfb #x54 #x44 #x2d #x18))))
   ;; Check many round trips
-  (let ((floats (list pi)))
+  (let ((floats (list float-pi)))
     (dotimes (_ 10000)
       (push (cl-random 1.0) floats))
     (dotimes (_ 1000)
@@ -91,7 +91,7 @@
         (should (= -1.0e+INF result)))))
   ;; Check specific known value
   (with-temp-buffer
-    (bitpack-store-f32 :> pi)
+    (bitpack-store-f32 :> float-pi)
     (should (equal (buffer-string) (string #x40 #x49 #x0f #xdb))))
   ;; Check integral values
   (let ((floats ()))
@@ -205,7 +205,7 @@
            (benchmark-run 500
              (with-temp-buffer
                (dotimes (_ 1000)
-                 (bitpack-store-f64 :> pi))))))
+                 (bitpack-store-f64 :> float-pi))))))
   (princ
    (format "bitpack-load-f64 %S\n"
            (with-temp-buffer

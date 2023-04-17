@@ -60,7 +60,7 @@ Packing and unpacking floating a point value:
 ```el
 (with-temp-buffer
   (set-buffer-multibyte nil)
-  (bitpack-store-f64 :> pi)
+  (bitpack-store-f64 :> float-pi)
   (buffer-string))
 ;; => "\x40\x09\x21\xfb\x54\x44\x2d\x18"
 
@@ -95,7 +95,7 @@ This writes a `middle-c.wav` file with three seconds of a middle C tone:
     (bitpack-store-i32 :< -1)       ; byte length
     (dotimes (i (* seconds hz))
       (let* ((time (/ i (float hz)))
-             (value (sin (* time freq 2.0 pi)))
+             (value (sin (* time freq 2.0 float-pi)))
              (sample (* 32767 value)))
         (bitpack-store-i16 :< (round sample))))))
 ```
