@@ -1,4 +1,4 @@
-;;; bitpack.el --- bit packing functions -*- lexical-binding: t; -*-
+;;; bitpack.el --- Bit packing functions -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 
@@ -11,13 +11,13 @@
 
 ;;; Commentary:
 
-;; bitdat is similar to the built-in bindat package. However, this
+;; bitdat is similar to the built-in bindat package.  However, this
 ;; package can encode IEEE 754 floating point values, both single
-;; (32-bit) and double precision (64-bit). Requires a 64-bit build of
+;; (32-bit) and double precision (64-bit).  Requires a 64-bit build of
 ;; Emacs.
 
-;; IEEe 754 NaN have a sign, and this library is careful to store that
-;; sign when packing NaN values. So be mindful of negative NaN:
+;; IEEE 754 NaN have a sign, and this library is careful to store that
+;; sign when packing NaN values.  So be mindful of negative NaN:
 
 ;; http://lists.gnu.org/archive/html/emacs-devel/2018-07/msg00816.html
 
@@ -78,7 +78,7 @@
 (defun bitpack-store-f32 (byte-order x)
   "Store single precision float X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (let* ((frexp (frexp (abs x)))
          (fract (car frexp))
@@ -104,7 +104,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-f64 (byte-order x)
   "Store double precision float X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (let* ((frexp (frexp (abs x)))
          (fract (car frexp))
@@ -130,7 +130,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i64 (byte-order x)
   "Store 64-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x -56) #xff)
@@ -153,7 +153,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i32 (byte-order x)
   "Store 32-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x -24) #xff)
@@ -168,7 +168,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i16 (byte-order x)
   "Store 16-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x  -8) #xff)
@@ -223,7 +223,7 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-load-f32 (byte-order)
   "Load single precision float from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -236,7 +236,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-f64 (byte-order)
   "Load double precision float from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -269,7 +269,7 @@ The point will be left just after the loaded value."
 (defun bitpack-load-u16 (byte-order)
   "Load unsigned 16-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char))))
@@ -280,7 +280,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-s16 (byte-order)
   "Load signed 16-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((x (bitpack-load-u16 byte-order)))
     (if (> x #x7fff)
@@ -290,7 +290,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-u32 (byte-order)
   "Load unsigned 32-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -303,7 +303,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-s32 (byte-order)
   "Load signed 32-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((x (bitpack-load-u32 byte-order)))
     (if (> x #x7fffffff)
@@ -342,7 +342,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-u64 (byte-order)
   "Load unsigned 64-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value.
 
 Prior to Emacs 27, this function will signal `arith-error' if the
@@ -356,7 +356,7 @@ integer cannot be represented as an Emacs Lisp integer."
 (defun bitpack-load-s64 (byte-order)
   "Load signed 64-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value.
 
 Prior to Emacs 27, this function will signal `arith-error' if the
