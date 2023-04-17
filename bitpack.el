@@ -1,16 +1,23 @@
-;;; bitpack.el --- bit packing functions -*- lexical-binding: t; -*-
+;;; bitpack.el --- Bit packing functions -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 
+;; Author: Christopher Wellons <wellons@nullprogram.com>
+;; Version: 1.0.0
+;; Created: 6 Apr 2019
+;; Keywords: c, comm
+;; Homepage: https://github.com/skeeto/bitpack
+;; Package-Requires: ((emacs "24.3"))
+
 ;;; Commentary:
 
-;; bitdat is similar to the built-in bindat package. However, this
+;; bitdat is similar to the built-in bindat package.  However, this
 ;; package can encode IEEE 754 floating point values, both single
-;; (32-bit) and double precision (64-bit). Requires a 64-bit build of
+;; (32-bit) and double precision (64-bit).  Requires a 64-bit build of
 ;; Emacs.
 
-;; IEEe 754 NaN have a sign, and this library is careful to store that
-;; sign when packing NaN values. So be mindful of negative NaN:
+;; IEEE 754 NaN have a sign, and this library is careful to store that
+;; sign when packing NaN values.  So be mindful of negative NaN:
 
 ;; http://lists.gnu.org/archive/html/emacs-devel/2018-07/msg00816.html
 
@@ -25,6 +32,9 @@
 ;; Store functions
 
 (defsubst bitpack--store-f32> (negp biased-exp mantissa)
+  "Store a single precision float in buffer at point as big-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (if negp
               (logior #x80 (ash biased-exp -1))
             (ash biased-exp -1))
@@ -34,6 +44,9 @@
           (% mantissa 256)))
 
 (defsubst bitpack--store-f32< (negp biased-exp mantissa)
+  "Store a single precision float in buffer at point as little-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (% mantissa 256)
           (% (ash mantissa -8) 256)
           (logior (% (ash mantissa -16) 128)
@@ -43,6 +56,9 @@
             (ash biased-exp -1))))
 
 (defsubst bitpack--store-f64> (negp biased-exp mantissa)
+  "Store a double precision float in buffer at point as big-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (if negp
               (logior #x80 (ash biased-exp -4))
             (ash biased-exp -4))
@@ -56,6 +72,9 @@
           (% mantissa 256)))
 
 (defsubst bitpack--store-f64< (negp biased-exp mantissa)
+  "Store a double precision float in buffer at point as little-endian.
+
+NEGP, BIASED-EXP and MANTISSA are the float components."
   (insert (% mantissa 256)
           (% (ash mantissa  -8) 256)
           (% (ash mantissa -16) 256)
@@ -71,7 +90,7 @@
 (defun bitpack-store-f32 (byte-order x)
   "Store single precision float X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (let* ((frexp (frexp (abs x)))
          (fract (car frexp))
@@ -97,7 +116,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-f64 (byte-order x)
   "Store double precision float X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (let* ((frexp (frexp (abs x)))
          (fract (car frexp))
@@ -123,7 +142,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i64 (byte-order x)
   "Store 64-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x -56) #xff)
@@ -146,7 +165,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i32 (byte-order x)
   "Store 32-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x -24) #xff)
@@ -161,7 +180,7 @@ buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-store-i16 (byte-order x)
   "Store 16-bit integer X in buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 buffer should *not* be multibyte (`set-buffer-multibyte')."
   (cl-case byte-order
     (:> (insert (logand (ash x  -8) #xff)
@@ -178,6 +197,10 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 ;; Load functions
 
 (defsubst bitpack--load-f32 (b0 b1 b2 b3)
+  "Load single precision float from the given bytes.
+
+B0, B1, B2, B3 are the bytes making up the float.
+B0 contains the MSB."
   (let* ((negp (= #x80 (logand b0 #x80)))
          (exp (logand (logior (ash b0 1) (ash b1 -7)) #xff))
          (mantissa (logior #x800000
@@ -194,6 +217,10 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
       result)))
 
 (defsubst bitpack--load-f64 (b0 b1 b2 b3 b4 b5 b6 b7)
+  "Load double precision float from the given bytes.
+
+B0, B1, B2, B3, B4, B5, B6, B7 are the bytes making up the float.
+B0 contains the MSB."
   (let* ((negp (= #x80 (logand b0 #x80)))
          (exp (logand (logior (ash b0 4) (ash b1 -4)) #x7ff))
          (mantissa (logior #x10000000000000
@@ -216,7 +243,7 @@ The buffer should *not* be multibyte (`set-buffer-multibyte')."
 (defun bitpack-load-f32 (byte-order)
   "Load single precision float from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -229,7 +256,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-f64 (byte-order)
   "Load double precision float from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -262,7 +289,7 @@ The point will be left just after the loaded value."
 (defun bitpack-load-u16 (byte-order)
   "Load unsigned 16-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char))))
@@ -273,7 +300,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-s16 (byte-order)
   "Load signed 16-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((x (bitpack-load-u16 byte-order)))
     (if (> x #x7fff)
@@ -283,7 +310,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-u32 (byte-order)
   "Load unsigned 32-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
@@ -296,7 +323,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-s32 (byte-order)
   "Load signed 32-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value."
   (let ((x (bitpack-load-u32 byte-order)))
     (if (> x #x7fffffff)
@@ -310,6 +337,13 @@ point will be left just after the loaded value."
     `(progn ,@body)))
 
 (defun bitpack--load-i64 (byte-order)
+  "Load 64-bit integer from buffer at point per BYTE-ORDER.
+
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
+point will be left just after the loaded value.
+
+This is an internal function, use `bitpack-load-u64' or
+`bitpack-load-s64' instead."
   (let ((b0 (prog1 (char-after) (forward-char)))
         (b1 (prog1 (char-after) (forward-char)))
         (b2 (prog1 (char-after) (forward-char)))
@@ -335,7 +369,7 @@ point will be left just after the loaded value."
 (defun bitpack-load-u64 (byte-order)
   "Load unsigned 64-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value.
 
 Prior to Emacs 27, this function will signal `arith-error' if the
@@ -349,7 +383,7 @@ integer cannot be represented as an Emacs Lisp integer."
 (defun bitpack-load-s64 (byte-order)
   "Load signed 64-bit integer from buffer at point per BYTE-ORDER.
 
-BYTE-ORDER may be :> (big endian) or :< (little endian). The
+BYTE-ORDER may be :> (big endian) or :< (little endian).  The
 point will be left just after the loaded value.
 
 Prior to Emacs 27, this function will signal `arith-error' if the
