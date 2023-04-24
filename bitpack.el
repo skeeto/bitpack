@@ -11,7 +11,7 @@
 
 ;;; Commentary:
 
-;; bitdat is similar to the built-in bindat package.  However, this
+;; bitpack is similar to the built-in bindat package.  However, this
 ;; package can encode IEEE 754 floating point values, both single
 ;; (32-bit) and double precision (64-bit).  Requires a 64-bit build of
 ;; Emacs.
